@@ -23,6 +23,7 @@ type Domain struct {
 	Skin          string
 	ServiceDle    string
 	ServiceImager string
+	NewsNumber    int
 }
 
 func (c *Domain) TableName() string {

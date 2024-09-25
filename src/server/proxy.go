@@ -29,7 +29,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	// get domain settings
 	dom, err := s.domainService.GetDomain(r.Host)
-	log.Printf("%+v", dom)
+	//log.Printf("%+v", dom)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Proxy error - domain not found", http.StatusInternalServerError)
@@ -40,8 +40,6 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.String(), "/posts/") {
 		targetHost = dom.ServiceImager
 	}
-
-	virtualHost := dom.HostPrivate
 
 	// Create a new HTTP request with the same method, URL, and body as the original request
 	targetURL := targetHost + r.URL.String()
@@ -55,7 +53,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	// replace host only for dle
 	if targetHost == dom.ServiceDle {
-		proxyReq.Host = virtualHost
+		proxyReq.Host = dom.HostPrivate
 	}
 
 	// Copy the headers from the original request to the proxy request
@@ -75,7 +73,8 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	proxyReq.Header.Add("X-Skin", dom.Skin)
-	//proxyReq.Header.Add("X-Skin", "baskino")
+	proxyReq.Header.Add("X-Domain-Id", fmt.Sprintf("%d", dom.ID))
+	proxyReq.Header.Add("X-News-Number", fmt.Sprintf("%d", dom.NewsNumber))
 
 	//Send the proxy request using the custom transport
 	resp, err := s.customTransport.RoundTrip(proxyReq)
