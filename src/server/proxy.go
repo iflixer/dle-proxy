@@ -72,10 +72,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	proxyReq.Header.Add("X-Skin", dom.Skin)
 	proxyReq.Header.Add("X-Domain-Id", fmt.Sprintf("%d", dom.ID))
-	proxyReq.Header.Add("X-News-Number", fmt.Sprintf("%d", dom.NewsNumber))
-	proxyReq.Header.Add("X-Site-Name", dom.Title)
 
 	//Send the proxy request using the custom transport
 	resp, err := s.customTransport.RoundTrip(proxyReq)
