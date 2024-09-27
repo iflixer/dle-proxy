@@ -28,7 +28,10 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
 	// get domain settings
-	dom, err := s.domainService.GetDomain(r.Host)
+	hostFull := strings.Split(r.Host, ":")
+	host := hostFull[0]
+
+	dom, err := s.domainService.GetDomain(host)
 	//log.Printf("%+v", dom)
 	if err != nil {
 		log.Println(err)
