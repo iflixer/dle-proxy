@@ -24,6 +24,8 @@ type Domain struct {
 	ServiceDle    string
 	ServiceImager string
 	NewsNumber    int
+	PortPublic    string
+	SchemePublic  string
 }
 
 func (c *Domain) TableName() string {
