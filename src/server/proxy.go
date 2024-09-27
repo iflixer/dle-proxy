@@ -28,6 +28,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
 	// get domain settings
+	// r.Host with port like proxy2.cis-dle.orb.local:8090
 	hostFull := strings.Split(r.Host, ":")
 	host := hostFull[0]
 
@@ -66,6 +67,9 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 			//log.Println(name, value)
 			if name == "Accept-Encoding" {
 				value = "" // avoid gzip by backend
+			}
+			if name == "Referer" {
+				value = strings.ReplaceAll(value, r.Host, dom.HostPrivate)
 			}
 			if isHopHeader(name) {
 				continue
