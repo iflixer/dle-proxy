@@ -48,7 +48,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	// Create a new HTTP request with the same method, URL, and body as the original request
 	targetURL := targetHost + r.URL.String()
 
-	log.Println(targetURL)
+	log.Printf("%s,%s,%s", r.Method, host, targetURL)
 	proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 	if err != nil {
 		http.Error(w, "Error creating proxy request", http.StatusInternalServerError)
