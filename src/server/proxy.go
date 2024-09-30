@@ -45,6 +45,10 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		targetHost = dom.ServiceImager
 	}
 
+	if r.URL.String() == "/sitemap.xml" {
+		targetHost = dom.ServiceSitemap
+	}
+
 	// Create a new HTTP request with the same method, URL, and body as the original request
 	targetURL := targetHost + r.URL.String()
 
@@ -80,6 +84,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	proxyReq.Header.Add("X-Domain-Id", fmt.Sprintf("%d", dom.ID))
+	proxyReq.Header.Add("X-Domain-Host", dom.HostPublic)
 
 	//Send the proxy request using the custom transport
 	resp, err := s.customTransport.RoundTrip(proxyReq)

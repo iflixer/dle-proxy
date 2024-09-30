@@ -16,16 +16,17 @@ type Service struct {
 }
 
 type Domain struct {
-	ID            int
-	Title         string
-	HostPublic    string
-	HostPrivate   string
-	Skin          string
-	ServiceDle    string
-	ServiceImager string
-	NewsNumber    int
-	PortPublic    string
-	SchemePublic  string
+	ID             int
+	Title          string
+	HostPublic     string
+	HostPrivate    string
+	Skin           string
+	ServiceDle     string
+	ServiceImager  string
+	ServiceSitemap string
+	NewsNumber     int
+	PortPublic     string
+	SchemePublic   string
 }
 
 func (c *Domain) TableName() string {
