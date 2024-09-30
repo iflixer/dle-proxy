@@ -101,7 +101,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			// need to modify html
-			if name == "Content-Type" && strings.HasPrefix(value, "text/html") {
+			if name == "Content-Type" && (strings.HasPrefix(value, "text/html") || strings.HasPrefix(value, "application/xml")) {
 				needReplace = true
 			}
 			//log.Println("response header:", name, value)
