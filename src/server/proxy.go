@@ -42,7 +42,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	targetHost := dom.ServiceDle
-	if strings.HasPrefix(r.URL.String(), "/posts/") {
+	if strings.HasPrefix(r.URL.String(), "/posts/") || strings.HasPrefix(r.URL.String(), "/fotos/") {
 		targetHost = dom.ServiceImager
 	}
 
@@ -96,6 +96,11 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	pubURL := dom.SchemePublic + "://" + dom.HostPublic
+	if dom.PortPublic != "" {
+		pubURL += ":" + dom.PortPublic
+	}
+
 	// Copy the headers from the proxy response to the original response
 	needReplaceDomain := false
 	needReplaceCanonical := false
@@ -106,6 +111,9 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 			}
 			if name == "Server" {
 				continue
+			}
+			if name == "Location" {
+				value = strings.ReplaceAll(value, "https://"+dom.HostPrivate, pubURL)
 			}
 			// need to modify html
 			if name == "Content-Type" && (strings.HasPrefix(value, "text/html") || strings.HasPrefix(value, "application/xml") || strings.HasPrefix(value, "text/plain")) {
@@ -121,11 +129,6 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	if needReplaceDomain {
 		body, _ := io.ReadAll(resp.Body)
-
-		pubURL := dom.SchemePublic + "://" + dom.HostPublic
-		if dom.PortPublic != "" {
-			pubURL += ":" + dom.PortPublic
-		}
 
 		body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
 		body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
