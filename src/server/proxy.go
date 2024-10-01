@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -96,7 +97,8 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	// Copy the headers from the proxy response to the original response
-	needReplace := false
+	needReplaceDomain := false
+	needReplaceCanonical := false
 	for name, values := range resp.Header {
 		for _, value := range values {
 			if name == "X-Powered-By" {
@@ -106,15 +108,18 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			// need to modify html
-			if name == "Content-Type" && (strings.HasPrefix(value, "text/html") || strings.HasPrefix(value, "application/xml")) {
-				needReplace = true
+			if name == "Content-Type" && (strings.HasPrefix(value, "text/html") || strings.HasPrefix(value, "application/xml") || strings.HasPrefix(value, "text/plain")) {
+				needReplaceDomain = true
+			}
+			if name == "Content-Type" && (strings.HasPrefix(value, "text/html")) {
+				needReplaceCanonical = true
 			}
 			//log.Println("response header:", name, value)
 			w.Header().Add(name, value)
 		}
 	}
 
-	if needReplace {
+	if needReplaceDomain {
 		body, _ := io.ReadAll(resp.Body)
 
 		pubURL := dom.SchemePublic + "://" + dom.HostPublic
@@ -127,6 +132,13 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 		// remove S3 domain for images
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
+
+		if needReplaceCanonical {
+			// <link rel="canonical" href="http://qwe/rwrrfewr/page/2/">
+			// <link rel="canonical" href="http://qwe/rwrrfewr/">
+			re := regexp.MustCompile(`<link rel="canonical" href="(.*)\/page\/[0-9]+\/">`)
+			body = re.ReplaceAll(body, []byte(`<link rel="canonical" href="${1}">`))
+		}
 
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
 
