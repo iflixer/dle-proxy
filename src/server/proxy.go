@@ -86,6 +86,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	proxyReq.Header.Add("X-Domain-Id", fmt.Sprintf("%d", dom.ID))
 	proxyReq.Header.Add("X-Domain-Host", dom.HostPublic)
+	proxyReq.Header.Add("X-Domain-Skin", dom.Skin)
 
 	//Send the proxy request using the custom transport
 	resp, err := s.customTransport.RoundTrip(proxyReq)
@@ -132,6 +133,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 		body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
 		body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
+		body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
 
 		// remove S3 domain for images
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
