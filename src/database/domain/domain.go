@@ -46,6 +46,17 @@ func (s *Service) GetDomain(host string) (domain *Domain, err error) {
 	return nil, fmt.Errorf("host not found:%s", host)
 }
 
+func (s *Service) GetDomains() (domains []Domain, err error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, g := range s.domains {
+		domains = append(domains, *g)
+	}
+
+	return
+}
+
 func NewService(dbService *database.Service, updatePeriod int) (s *Service, err error) {
 
 	s = &Service{

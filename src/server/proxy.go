@@ -28,6 +28,13 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
 
+	if r.URL.String() == "/traefik" {
+		config := s.traefikConfig()
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(config))
+		return
+	}
+
 	// get domain settings
 	// r.Host with port like proxy2.cis-dle.orb.local:8090
 	hostFull := strings.Split(r.Host, ":")
