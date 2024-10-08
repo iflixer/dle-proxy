@@ -24,6 +24,7 @@ type Domain struct {
 	ServiceDle     string
 	ServiceImager  string
 	ServiceSitemap string
+	ServiceDns     string
 	NewsNumber     int
 	PortPublic     string
 	SchemePublic   string
