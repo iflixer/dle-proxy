@@ -7,7 +7,7 @@ func (s *Service) traefikConfig() string {
 		" http:\n" +
 		"  routers:\n" +
 		"   [host_]:\n" +
-		"    rule: Host(`[host]`)]\n" +
+		"    rule: Host(`[host]`)\n" +
 		"    service: cis-proxy\n"
 
 	domains, _ := s.domainService.GetDomains()
