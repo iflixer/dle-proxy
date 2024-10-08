@@ -3,15 +3,15 @@ package server
 import "strings"
 
 func (s *Service) traefikConfig() string {
-	tpl := "providers:\n" +
-		" http:\n" +
-		"  routers:\n" +
+	tpl := "" +
 		"   [host_]:\n" +
 		"    rule: Host(`[host]`)\n" +
 		"    service: cis-proxy\n"
 
 	domains, _ := s.domainService.GetDomains()
-	result := ""
+	result := "providers:" +
+		" http:" +
+		"  routers:"
 	for _, d := range domains {
 		row := tpl
 		row = strings.ReplaceAll(row, "[host]", d.HostPublic)
