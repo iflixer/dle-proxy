@@ -4,14 +4,13 @@ import "strings"
 
 func (s *Service) traefikConfig() string {
 	tpl := "" +
-		"   [host_]:\n" +
-		"    rule: Host(`[host]`)\n" +
-		"    service: cis-proxy\n"
+		"  [host_]:\n" +
+		"   rule: Host(`[host]`)\n" +
+		"   service: cis-proxy@docker\n"
 
 	domains, _ := s.domainService.GetDomains()
-	result := "providers:\n" +
-		" http:\n" +
-		"  routers:\n"
+	result := "http:\n" +
+		" routers:\n"
 	for _, d := range domains {
 		row := tpl
 		row = strings.ReplaceAll(row, "[host]", d.HostPublic)
