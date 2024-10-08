@@ -3,9 +3,12 @@ package server
 import "strings"
 
 func (s *Service) traefikConfig() string {
-	tpl := "[providers.http.routers.[host_]]\n" +
-		" rule = \"Host(`[host]`)]\"\n" +
-		" service = \"cis-proxy\"\n"
+	tpl := "providers:\n" +
+		" http:\n" +
+		"  routers:\n" +
+		"   [host_]:\n" +
+		"    rule: Host(`[host]`)]\n" +
+		"    service: cis-proxy\n"
 
 	domains, _ := s.domainService.GetDomains()
 	result := ""
