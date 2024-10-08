@@ -9,9 +9,9 @@ func (s *Service) traefikConfig() string {
 		"    service: cis-proxy\n"
 
 	domains, _ := s.domainService.GetDomains()
-	result := "providers:" +
-		" http:" +
-		"  routers:"
+	result := "providers:\n" +
+		" http:\n" +
+		"  routers:\n"
 	for _, d := range domains {
 		row := tpl
 		row = strings.ReplaceAll(row, "[host]", d.HostPublic)
