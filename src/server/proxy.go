@@ -135,9 +135,9 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	if needReplaceDomain {
 		body, _ := io.ReadAll(resp.Body)
 
-		body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
-		body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
 		body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
+		body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
+		body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
 
 		// remove S3 domain for images
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
