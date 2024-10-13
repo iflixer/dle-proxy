@@ -26,18 +26,31 @@ var hopHeaders = []string{
 
 func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
+	//log.Printf("%+v", r)
+
+	//log.Println(r.URL.String())
 	start := time.Now()
 
 	// get domain settings
 	// r.Host with port like proxy2.cis-dle.orb.local:8090
-	hostFull := strings.Split(r.Host, ":")
+	hostFull := strings.Split(r.Header.Get("X-Forwarded-Host"), ":")
+	if len(hostFull) == 0 {
+		hostFull = strings.Split(r.Host, ":")
+	}
 	host := hostFull[0]
 
 	dom, err := s.domainService.GetDomain(host)
 	//log.Printf("%+v", dom)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Proxy error - domain not found", http.StatusInternalServerError)
+		http.Error(w, "Proxy error - domain ["+host+"] not found", http.StatusInternalServerError)
+		return
+	}
+
+	// file request?
+	if file, err := s.fileService.GetFile(dom.ID, r.URL.String()); err == nil {
+		w.Header().Set("Content-Type", file.ContentType)
+		w.Write([]byte(file.Body))
 		return
 	}
 
@@ -60,6 +73,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s,%s,%s", r.Method, host, targetURL)
 	proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "Error creating proxy request", http.StatusInternalServerError)
 		return
 	}
@@ -78,7 +92,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 				value = "" // avoid gzip by backend
 			}
 			if name == "Referer" {
-				value = strings.ReplaceAll(value, r.Host, dom.HostPrivate)
+				value = strings.ReplaceAll(value, host, dom.HostPrivate)
 			}
 			if isHopHeader(name) {
 				continue
@@ -121,7 +135,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 				value = strings.ReplaceAll(value, "https://"+dom.HostPrivate, pubURL)
 			}
 			// need to modify html
-			if name == "Content-Type" && (strings.HasPrefix(value, "text/html") || strings.HasPrefix(value, "application/xml") || strings.HasPrefix(value, "text/plain")) {
+			if name == "Content-Type" && (strings.HasPrefix(value, "text/html") || strings.HasPrefix(value, "application/xml") || strings.HasPrefix(value, "application/json") || strings.HasPrefix(value, "text/plain")) {
 				needReplaceDomain = true
 			}
 			if name == "Content-Type" && (strings.HasPrefix(value, "text/html")) {
@@ -134,10 +148,12 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	if needReplaceDomain {
 		body, _ := io.ReadAll(resp.Body)
-
+		pubURLHost := strings.ReplaceAll(pubURL, "https://", "")
 		//body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
-		body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
-		body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
+		// body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
+		body = bytes.ReplaceAll(body, []byte(dom.HostPrivate), []byte(pubURLHost))
+		//body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
+		// sometimes we have urls in public sites to admin domain, replace them too!
 		body = bytes.ReplaceAll(body, []byte("https://odminko.baskino.ink"), []byte(pubURL))
 
 		// remove S3 domain for images

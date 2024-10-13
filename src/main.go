@@ -3,6 +3,7 @@ package main
 import (
 	"dle-proxy/database"
 	"dle-proxy/database/domain"
+	"dle-proxy/database/domainFile"
 	"dle-proxy/server"
 	"log"
 	"os"
@@ -49,7 +50,14 @@ func main() {
 		log.Println("domainService OK")
 	}
 
-	serverService, err := server.NewService(port, dbService, domainService)
+	fileService, err := domainFile.NewService(dbService, 60)
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("fileService OK")
+	}
+
+	serverService, err := server.NewService(port, dbService, domainService, fileService)
 	if err != nil {
 		log.Fatal(err)
 	}
