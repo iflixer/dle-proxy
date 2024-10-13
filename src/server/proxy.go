@@ -151,10 +151,10 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		pubURLHost := strings.ReplaceAll(pubURL, "https://", "")
 		//body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
 		// body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
+		body = bytes.ReplaceAll(body, []byte("odminko."+dom.HostPrivate), []byte(pubURLHost))
 		body = bytes.ReplaceAll(body, []byte(dom.HostPrivate), []byte(pubURLHost))
 		//body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
 		// sometimes we have urls in public sites to admin domain, replace them too!
-		body = bytes.ReplaceAll(body, []byte("https://odminko.baskino.ink"), []byte(pubURL))
 
 		// remove S3 domain for images
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
