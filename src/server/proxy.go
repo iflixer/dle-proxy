@@ -33,11 +33,14 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	// get domain settings
 	// r.Host with port like proxy2.cis-dle.orb.local:8090
-	hostFull := strings.Split(r.Header.Get("X-Forwarded-Host"), ":")
-	if len(hostFull) == 0 {
-		hostFull = strings.Split(r.Host, ":")
+	hostFull := strings.Split(r.Host, ":")
+	hostHeader := r.Header.Get("X-Forwarded-Host")
+	if hostHeader != "" {
+		hostFull = strings.Split(hostHeader, ":")
 	}
 	host := hostFull[0]
+
+	log.Println(host, r.URL.String())
 
 	dom, err := s.domainService.GetDomain(host)
 	//log.Printf("%+v", dom)
@@ -151,10 +154,13 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		pubURLHost := strings.ReplaceAll(pubURL, "https://", "")
 		//body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
 		// body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
-		body = bytes.ReplaceAll(body, []byte("odminko."+dom.HostPrivate), []byte(pubURLHost))
-		body = bytes.ReplaceAll(body, []byte(dom.HostPrivate), []byte(pubURLHost))
-		//body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
+
 		// sometimes we have urls in public sites to admin domain, replace them too!
+		body = bytes.ReplaceAll(body, []byte("odminko."+dom.HostPrivate), []byte(pubURLHost))
+
+		body = bytes.ReplaceAll(body, []byte(dom.HostPrivate), []byte(pubURLHost))
+
+		//body = bytes.ReplaceAll(body, []byte("https://"+dom.HostPrivate), []byte(pubURL))
 
 		// remove S3 domain for images
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
