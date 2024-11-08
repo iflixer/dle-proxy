@@ -166,9 +166,10 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
 
 		if needReplaceCanonical {
+			log.Println("replace canonical")
 			// <link rel="canonical" href="http://qwe/rwrrfewr/page/2/">
 			// <link rel="canonical" href="http://qwe/rwrrfewr/">
-			re := regexp.MustCompile(`<link rel="canonical" href="(.*)\/page\/[0-9]+\/">`)
+			re := regexp.MustCompile(`<link rel="canonical" href="(.*)\/page\/[0-9]+">`)
 			body = re.ReplaceAll(body, []byte(`<link rel="canonical" href="${1}">`))
 		}
 

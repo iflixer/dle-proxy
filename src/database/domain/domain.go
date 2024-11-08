@@ -34,17 +34,17 @@ func (c *Domain) TableName() string {
 	return "flix_domain"
 }
 
-func (s *Service) GetDomain(host string) (domain *Domain, err error) {
+func (s *Service) GetDomain(host string) (domain Domain, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	for _, g := range s.domains {
 		if g.HostPublic == host {
-			return g, nil
+			return *g, nil
 		}
 	}
 
-	return nil, fmt.Errorf("host not found:%s", host)
+	return domain, fmt.Errorf("host not found:%s", host)
 }
 
 func (s *Service) GetDomains() (domains []Domain, err error) {
