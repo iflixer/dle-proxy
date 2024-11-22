@@ -31,6 +31,8 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	//log.Println(r.URL.String())
 	start := time.Now()
 
+	forbiddenReplaceDomain := false
+
 	// get domain settings
 	// r.Host with port like proxy2.cis-dle.orb.local:8090
 	hostFull := strings.Split(r.Host, ":")
@@ -60,14 +62,17 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	targetHost := dom.ServiceDle
 	if strings.HasPrefix(r.URL.String(), "/posts/") || strings.HasPrefix(r.URL.String(), "/fotos/") {
 		targetHost = dom.ServiceImager
+		forbiddenReplaceDomain = true
 	}
 
 	if r.URL.String() == "/sitemap.xml" {
 		targetHost = dom.ServiceSitemap
+		forbiddenReplaceDomain = true
 	}
 
 	if r.URL.String() == "/traefik" {
 		targetHost = dom.ServiceDns
+		forbiddenReplaceDomain = true
 	}
 
 	// Create a new HTTP request with the same method, URL, and body as the original request
@@ -149,7 +154,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if needReplaceDomain {
+	if needReplaceDomain && !forbiddenReplaceDomain {
 		body, _ := io.ReadAll(resp.Body)
 		pubURLHost := strings.ReplaceAll(pubURL, "https://", "")
 		//body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
