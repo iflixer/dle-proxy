@@ -65,7 +65,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		forbiddenReplaceDomain = true
 	}
 
-	if r.URL.String() == "/sitemap.xml" {
+	if strings.HasPrefix(r.URL.String(), "/sitemap") {
 		targetHost = dom.ServiceSitemap
 		forbiddenReplaceDomain = true
 	}
