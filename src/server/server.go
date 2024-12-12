@@ -3,6 +3,7 @@ package server
 import (
 	"dle-proxy/database"
 	"dle-proxy/database/domain"
+	"dle-proxy/database/domainAlias"
 	"dle-proxy/database/domainFile"
 	"fmt"
 	"log"
@@ -10,12 +11,13 @@ import (
 )
 
 type Service struct {
-	port            string
-	server          http.Server
-	dbService       *database.Service
-	domainService   *domain.Service
-	fileService     *domainFile.Service
-	customTransport http.RoundTripper
+	port               string
+	server             http.Server
+	dbService          *database.Service
+	domainService      *domain.Service
+	domainAliasService *domainAlias.Service
+	fileService        *domainFile.Service
+	customTransport    http.RoundTripper
 }
 
 func (s *Service) Run() {
@@ -27,14 +29,15 @@ func (s *Service) Run() {
 	}
 }
 
-func NewService(port string, dbService *database.Service, domainService *domain.Service, fileService *domainFile.Service) (s *Service, err error) {
+func NewService(port string, dbService *database.Service, domainService *domain.Service, domainAliasService *domainAlias.Service, fileService *domainFile.Service) (s *Service, err error) {
 
 	s = &Service{
-		port:            port,
-		dbService:       dbService,
-		domainService:   domainService,
-		fileService:     fileService,
-		customTransport: http.DefaultTransport,
+		port:               port,
+		dbService:          dbService,
+		domainService:      domainService,
+		domainAliasService: domainAliasService,
+		fileService:        fileService,
+		customTransport:    http.DefaultTransport,
 	}
 	s.server = http.Server{
 		Addr:    fmt.Sprintf(":%s", port),

@@ -34,7 +34,7 @@ func (s *Service) GetFile(domainId int, path string) (domain *DomainFile, err er
 
 	path = strings.Trim(path, "/")
 
-	log.Println("search file by ", domainId, path)
+	//log.Println("search file by ", domainId, path)
 	for _, g := range s.files {
 		if g.DomainId == domainId && g.Path == path {
 			return g, nil

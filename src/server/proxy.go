@@ -28,7 +28,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	//log.Printf("%+v", r)
 
-	log.Println(r.URL.String())
+	//log.Println(r.URL.String())
 	start := time.Now()
 
 	forbiddenReplaceDomain := false
@@ -41,19 +41,33 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		hostFull = strings.Split(hostHeader, ":")
 	}
 	host := hostFull[0]
+	path := r.URL.String()
 
 	log.Println(host, r.URL.String())
+
+	// check if this domain is alias so we need to redirect to main domain
+	alias, err := s.domainAliasService.GetDomain(host)
+	if err == nil {
+		domain, err := s.domainService.GetDomainByID(alias.DomainID)
+		if err == nil {
+			targetURL := fmt.Sprintf("https://%s%s", domain.HostPublic, path)
+			log.Printf("%s 302 %s\n", path, targetURL)
+			http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
+			return
+		}
+	}
 
 	dom, err := s.domainService.GetDomain(host)
 	//log.Printf("%+v", dom)
 	if err != nil {
-		log.Println(err)
+		log.Println("Proxy error - domain ["+host+"] not found", err)
 		http.Error(w, "Proxy error - domain ["+host+"] not found", http.StatusInternalServerError)
 		return
 	}
 
 	// file request?
 	if file, err := s.fileService.GetFile(dom.ID, r.URL.String()); err == nil {
+		log.Printf("%s STAT\n", path)
 		w.Header().Set("Content-Type", file.ContentType)
 		w.Write([]byte(file.Body))
 		return
@@ -82,6 +96,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 	if err != nil {
 		log.Println(err)
+		log.Println("Error creating proxy request", err.Error())
 		http.Error(w, "Error creating proxy request", http.StatusInternalServerError)
 		return
 	}
@@ -117,7 +132,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	//Send the proxy request using the custom transport
 	resp, err := s.customTransport.RoundTrip(proxyReq)
 	if err != nil {
-		log.Println(err)
+		log.Println("Proxy error", err)
 		http.Error(w, "Proxy error", http.StatusInternalServerError)
 		return
 	}
@@ -155,6 +170,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if needReplaceDomain && !forbiddenReplaceDomain {
+		log.Printf("%s R\n", path)
 		body, _ := io.ReadAll(resp.Body)
 		pubURLHost := strings.ReplaceAll(pubURL, "https://", "")
 		//body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
@@ -171,7 +187,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
 
 		if needReplaceCanonical {
-			log.Println("replace canonical")
+			//log.Println("replace canonical")
 			// <link rel="canonical" href="http://qwe/rwrrfewr/page/2/">
 			// <link rel="canonical" href="http://qwe/rwrrfewr/">
 			re := regexp.MustCompile(`<link rel="canonical" href="(.*)\/page\/[0-9]+">`)
@@ -186,6 +202,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("%s\n", path)
 	w.Header().Add("X-Proxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
 	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)

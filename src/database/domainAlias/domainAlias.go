@@ -1,4 +1,4 @@
-package domain
+package domainAlias
 
 import (
 	"dle-proxy/database"
@@ -12,47 +12,24 @@ type Service struct {
 	mu           sync.RWMutex
 	dbService    *database.Service
 	updatePeriod time.Duration
-	domains      []*Domain
+	domains      []*DomainAlias
 }
 
-type Domain struct {
-	ID             int
-	Title          string
-	HostPublic     string
-	HostPrivate    string
-	Skin           string
-	ServiceDle     string
-	ServiceImager  string
-	ServiceSitemap string
-	ServiceDns     string
-	NewsNumber     int
-	PortPublic     string
-	SchemePublic   string
+type DomainAlias struct {
+	DomainID int
+	Host     string
 }
 
-func (c *Domain) TableName() string {
-	return "flix_domain"
+func (c *DomainAlias) TableName() string {
+	return "flix_domain_alias"
 }
 
-func (s *Service) GetDomainByID(id int) (domain Domain, err error) {
+func (s *Service) GetDomain(host string) (domain DomainAlias, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	for _, g := range s.domains {
-		if g.ID == id {
-			return *g, nil
-		}
-	}
-
-	return domain, fmt.Errorf("domain not found:%d", id)
-}
-
-func (s *Service) GetDomain(host string) (domain Domain, err error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	for _, g := range s.domains {
-		if g.HostPublic == host {
+		if g.Host == host {
 			return *g, nil
 		}
 	}
@@ -60,7 +37,7 @@ func (s *Service) GetDomain(host string) (domain Domain, err error) {
 	return domain, fmt.Errorf("host not found:%s", host)
 }
 
-func (s *Service) GetDomains() (domains []Domain, err error) {
+func (s *Service) GetDomains() (domains []DomainAlias, err error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -95,7 +72,7 @@ func (s *Service) loadWorker() {
 }
 
 func (s *Service) loadData() (err error) {
-	var dd []*Domain
+	var dd []*DomainAlias
 	if err = s.dbService.DB.Find(&dd).Error; err == nil {
 		s.mu.Lock()
 		s.domains = dd
