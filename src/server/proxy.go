@@ -28,7 +28,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	//log.Printf("%+v", r)
 
-	//log.Println(r.URL.String())
+	log.Println(r.URL.String())
 	start := time.Now()
 
 	forbiddenReplaceDomain := false
