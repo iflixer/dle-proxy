@@ -178,6 +178,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 		// sometimes we have urls in public sites to admin domain, replace them too!
 		body = bytes.ReplaceAll(body, []byte("odminko."+dom.HostPrivate), []byte(pubURLHost))
+		body = bytes.ReplaceAll(body, []byte("odminko.printhouse.casa"), []byte(pubURLHost))
 
 		body = bytes.ReplaceAll(body, []byte(dom.HostPrivate), []byte(pubURLHost))
 
