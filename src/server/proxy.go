@@ -48,6 +48,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	// check if this domain is alias so we need to redirect to main domain
 	alias, err := s.domainAliasService.GetDomain(host)
 	if err == nil {
+		log.Printf("domain alias %s id %d\n", host, alias.DomainID)
 		domain, err := s.domainService.GetDomainByID(alias.DomainID)
 		if err == nil {
 			targetURL := fmt.Sprintf("https://%s%s", domain.HostPublic, path)
