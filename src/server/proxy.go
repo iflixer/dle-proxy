@@ -26,7 +26,7 @@ var hopHeaders = []string{
 
 func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
-	log.Printf("v1.1", r)
+	log.Println("v1.1", r)
 
 	//log.Println(r.URL.String())
 	start := time.Now()
