@@ -26,8 +26,6 @@ var hopHeaders = []string{
 
 func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
-	log.Println("v1.1", r)
-
 	//log.Println(r.URL.String())
 	start := time.Now()
 
@@ -187,6 +185,9 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 		// remove S3 domain for images
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
+
+		// cache breaker for all images
+		body = bytes.ReplaceAll(body, []byte(".jpg\""), []byte(".jpg\"?v=1"))
 
 		if needReplaceCanonical {
 			//log.Println("replace canonical")
