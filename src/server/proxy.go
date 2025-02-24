@@ -64,6 +64,11 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.HasPrefix(r.URL.String(), "/robots.txt") && dom.DisallowRobots {
+		w.Write([]byte("User-agent: *\nDisallow: /"))
+		return
+	}
+
 	// file request?
 	if file, err := s.fileService.GetFile(dom.ID, r.URL.String()); err == nil {
 		log.Printf("%s STAT\n", path)
@@ -123,6 +128,8 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 			proxyReq.Header.Add(name, value)
 		}
 	}
+
+	// allow cloudflare cache
 
 	proxyReq.Header.Add("X-Domain-Id", fmt.Sprintf("%d", dom.ID))
 	proxyReq.Header.Add("X-Domain-Host", dom.HostPublic)

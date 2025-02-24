@@ -28,6 +28,7 @@ type Domain struct {
 	NewsNumber     int
 	PortPublic     string
 	SchemePublic   string
+	DisallowRobots bool
 }
 
 func (c *Domain) TableName() string {
