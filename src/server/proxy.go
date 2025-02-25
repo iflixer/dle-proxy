@@ -66,7 +66,12 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasPrefix(r.URL.String(), "/robots.txt") && dom.DisallowRobots {
 		w.Write([]byte(`User-agent: *
-Disallow: /`))
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+Host: https://` + host + `/`))
 		return
 	}
 
