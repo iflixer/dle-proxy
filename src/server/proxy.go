@@ -43,6 +43,14 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(host, r.URL.String())
 
+	// redirect www to non-www
+	if strings.HasPrefix(host, "www.") {
+		targetURL := fmt.Sprintf("https://%s%s", host[4:], path)
+		log.Printf("%s 302 %s\n", path, targetURL)
+		http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
+		return
+	}
+
 	// check if this domain is alias so we need to redirect to main domain
 	alias, err := s.domainAliasService.GetDomain(host)
 	if err == nil {
@@ -84,7 +92,7 @@ Host: https://` + host + `/`))
 	}
 
 	targetHost := dom.ServiceDle
-	if strings.HasPrefix(r.URL.String(), "/posts/") || strings.HasPrefix(r.URL.String(), "/fotos/") {
+	if strings.HasPrefix(r.URL.String(), "/posts/") || strings.HasPrefix(r.URL.String(), "/fotos/") || strings.HasPrefix(r.URL.String(), "/resize/") {
 		targetHost = dom.ServiceImager
 		forbiddenReplaceDomain = true
 	}
