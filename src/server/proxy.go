@@ -41,7 +41,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	host := hostFull[0]
 	path := r.URL.String()
 
-	log.Println(host, r.URL.String())
+	//log.Println(host, r.URL.String())
 
 	// check if this domain is alias so we need to redirect to main domain
 	alias, err := s.domainAliasService.GetDomain(host)
@@ -102,7 +102,6 @@ Host: https://` + host + `/`))
 	// Create a new HTTP request with the same method, URL, and body as the original request
 	targetURL := targetHost + r.URL.String()
 
-	log.Printf("%s,%s,%s", r.Method, host, targetURL)
 	proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 	if err != nil {
 		log.Println(err)
@@ -186,7 +185,8 @@ Host: https://` + host + `/`))
 
 	if needReplaceDomain && !forbiddenReplaceDomain {
 		body, _ := io.ReadAll(resp.Body)
-		log.Printf("%s %d R\n", path, len(body))
+
+		//log.Printf("%s %d R\n", path, len(body))
 
 		pubURLHost := strings.ReplaceAll(pubURL, "https://", "")
 		//body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
@@ -217,15 +217,19 @@ Host: https://` + host + `/`))
 		w.Header().Set("X-Proxy-Mode", "modified")
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
 
+		log.Printf("%s (%s) %s %d R\n", r.Method, host, targetURL, len(body))
+
 		w.Header().Add("X-Proxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
 		w.WriteHeader(resp.StatusCode)
 		w.Write(body)
 		return
 	}
 
-	log.Printf("%s\n", path)
+	//log.Printf("%s\n", path)
+
 	// это тупо конечно вычитывать ответ только чтобы узнать его длину но апач не передает Content-Length
 	body, _ := io.ReadAll(resp.Body)
+	log.Printf("%s (%s) %s %d D\n", r.Method, host, targetURL, len(body))
 	w.Header().Set("X-Proxy-Mode", "direct")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
 	w.Header().Add("X-Proxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
