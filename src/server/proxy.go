@@ -14,14 +14,14 @@ import (
 // Hop-by-hop headers. These are removed when sent to the backend.
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
 var hopHeaders = []string{
-	"Connection",
-	"Keep-Alive",
+	//"Connection",
+	//"Keep-Alive",
 	"Proxy-Authenticate",
 	"Proxy-Authorization",
 	"Te", // canonicalized version of "TE"
 	"Trailers",
 	"Transfer-Encoding",
-	"Upgrade",
+	//"Upgrade",
 }
 
 func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
@@ -219,10 +219,14 @@ Host: https://` + host + `/`))
 	}
 
 	log.Printf("%s\n", path)
+	// это тупо конечно вычитывать ответ только чтобы узнать его длину но апач не передает Content-Length
+	body, _ := io.ReadAll(resp.Body)
+	w.Header().Set("X-Proxy-Version", "1.0")
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
 	w.Header().Add("X-Proxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
-
+	w.Write(body)
+	// io.Copy(w, resp.Body)
 }
 
 func isHopHeader(header string) bool {
