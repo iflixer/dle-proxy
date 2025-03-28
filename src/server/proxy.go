@@ -166,6 +166,9 @@ Host: https://` + host + `/`))
 			if name == "Server" {
 				continue
 			}
+			if name == "Content-Length" {
+				continue
+			}
 			if name == "Location" {
 				value = strings.ReplaceAll(value, "https://"+dom.HostPrivate, pubURL)
 			}
