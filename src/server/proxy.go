@@ -210,6 +210,7 @@ Host: https://` + host + `/`))
 			body = re.ReplaceAll(body, []byte(`<link rel="canonical" href="${1}">`))
 		}
 
+		w.Header().Set("X-Proxy-Mode", "modified")
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
 
 		w.Header().Add("X-Proxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
@@ -221,7 +222,7 @@ Host: https://` + host + `/`))
 	log.Printf("%s\n", path)
 	// это тупо конечно вычитывать ответ только чтобы узнать его длину но апач не передает Content-Length
 	body, _ := io.ReadAll(resp.Body)
-	w.Header().Set("X-Proxy-Version", "1.0")
+	w.Header().Set("X-Proxy-Mode", "direct")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
 	w.Header().Add("X-Proxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
 	w.WriteHeader(resp.StatusCode)
