@@ -182,8 +182,9 @@ Host: https://` + host + `/`))
 	}
 
 	if needReplaceDomain && !forbiddenReplaceDomain {
-		log.Printf("%s R\n", path)
 		body, _ := io.ReadAll(resp.Body)
+		log.Printf("%s %d R\n", path, len(body))
+
 		pubURLHost := strings.ReplaceAll(pubURL, "https://", "")
 		//body = bytes.ReplaceAll(body, []byte("//"+dom.HostPrivate), []byte(pubURL))
 		// body = bytes.ReplaceAll(body, []byte("http://"+dom.HostPrivate), []byte(pubURL))
