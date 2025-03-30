@@ -204,7 +204,7 @@ Host: https://` + host + `/`))
 		body = bytes.ReplaceAll(body, []byte(dom.ServiceImager), []byte(""))
 
 		// cache breaker for all images
-		body = bytes.ReplaceAll(body, []byte(".jpg\""), []byte(".jpg?v=1\""))
+		//body = bytes.ReplaceAll(body, []byte(".jpg\""), []byte(".jpg?v=1\""))
 
 		if needReplaceCanonical {
 			//log.Println("replace canonical")
