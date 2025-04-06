@@ -60,7 +60,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	//log.Printf("%+v", dom)
 	if err != nil {
 		log.Println("Proxy error - domain ["+host+"] not found", err)
-		http.Error(w, "Proxy error - domain ["+host+"] not found", http.StatusInternalServerError)
+		http.Error(w, "Proxy error - domain ["+host+"] not found", http.StatusNotFound)
 		return
 	}
 
