@@ -84,8 +84,13 @@ Host: https://` + host + `/`))
 	}
 
 	targetHost := dom.ServiceDle
-	if strings.HasPrefix(r.URL.String(), "/posts/") || strings.HasPrefix(r.URL.String(), "/fotos/") || strings.HasPrefix(r.URL.String(), "/resize/") {
+	if strings.HasPrefix(r.URL.String(), "/posts/") || strings.HasPrefix(r.URL.String(), "/fotos/") {
 		targetHost = dom.ServiceImager
+		forbiddenReplaceDomain = true
+	}
+
+	if strings.HasPrefix(r.URL.String(), "/resize/") {
+		targetHost = "http://imaginary:8088"
 		forbiddenReplaceDomain = true
 	}
 
