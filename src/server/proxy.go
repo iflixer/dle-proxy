@@ -41,7 +41,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	host := hostFull[0]
 	path := r.URL.String()
 
-	//log.Println(host, r.URL.String())
+	//log.Println(host, path)
 
 	// check if this domain is alias so we need to redirect to main domain
 	alias, err := s.domainAliasService.GetDomain(host)
@@ -64,7 +64,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.HasPrefix(r.URL.String(), "/robots.txt") && dom.DisallowRobots {
+	if strings.HasPrefix(path, "/robots.txt") && dom.DisallowRobots {
 		w.Write([]byte(`User-agent: *
 Disallow: /
 
@@ -76,7 +76,7 @@ Host: https://` + host + `/`))
 	}
 
 	// file request?
-	if file, err := s.fileService.GetFile(dom.ID, r.URL.String()); err == nil {
+	if file, err := s.fileService.GetFile(dom.ID, path); err == nil {
 		log.Printf("%s STAT\n", path)
 		w.Header().Set("Content-Type", file.ContentType)
 		w.Write([]byte(file.Body))
@@ -84,28 +84,31 @@ Host: https://` + host + `/`))
 	}
 
 	targetHost := dom.ServiceDle
-	if strings.HasPrefix(r.URL.String(), "/posts/") || strings.HasPrefix(r.URL.String(), "/fotos/") {
+	if strings.HasPrefix(path, "/posts/") || strings.HasPrefix(path, "/fotos/") {
 		targetHost = dom.ServiceImager
 		forbiddenReplaceDomain = true
 	}
 
-	if strings.HasPrefix(r.URL.String(), "/resize/") {
+	if strings.HasPrefix(path, "/resize/") {
 		targetHost = "http://imaginary:8088"
+		path = strings.ReplaceAll(path, "/resize/", "/crop/")
+		path = strings.ReplaceAll(path, "w=", "width=")
+		path = strings.ReplaceAll(path, "h=", "height=")
 		forbiddenReplaceDomain = true
 	}
 
-	if strings.HasPrefix(r.URL.String(), "/sitemap") {
+	if strings.HasPrefix(path, "/sitemap") {
 		targetHost = dom.ServiceSitemap
 		forbiddenReplaceDomain = true
 	}
 
-	if r.URL.String() == "/traefik" {
+	if path == "/traefik" {
 		targetHost = dom.ServiceDns
 		forbiddenReplaceDomain = true
 	}
 
 	// Create a new HTTP request with the same method, URL, and body as the original request
-	targetURL := targetHost + r.URL.String()
+	targetURL := targetHost + path
 
 	proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 	if err != nil {
