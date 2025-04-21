@@ -89,7 +89,7 @@ Host: https://` + host + `/`))
 		forbiddenReplaceDomain = true
 	}
 
-	if strings.HasPrefix(path, "/resize/") {
+	if strings.HasPrefix(path, "/resize/") || strings.HasPrefix(path, "/crop/") {
 		targetHost = "http://imaginary:8088"
 		//path = strings.ReplaceAll(path, "/resize/", "/crop/")
 		path = strings.ReplaceAll(path, "?w=", "?width=")
