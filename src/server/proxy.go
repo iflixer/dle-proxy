@@ -57,7 +57,6 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dom, err := s.domainService.GetDomain(host)
-	//log.Printf("%+v", dom)
 	if err != nil {
 		log.Println("Proxy error - domain ["+host+"] not found", err)
 		http.Error(w, "Proxy error - domain ["+host+"] not found", http.StatusNotFound)
@@ -81,6 +80,29 @@ Host: https://` + host + `/`))
 		w.Header().Set("Content-Type", file.ContentType)
 		w.Write([]byte(file.Body))
 		return
+	}
+
+	// check if we have url overrides in flix_post
+	if strings.HasSuffix(path, ".html") {
+		post, altName, err := s.flixPostService.GetPost(dom.ID, path)
+		if err == nil {
+			// we have override
+			if post.AltName != altName {
+				if post.Redirect == 1 {
+					targetPath := strings.Replace(path, altName+".html", post.AltName+".html", 1)
+					targetURL := fmt.Sprintf("https://%s%s", dom.HostPublic, targetPath)
+					log.Printf("%s 301 %s\n", path, targetURL)
+					w.Header().Set("X-Proxy-Redirect-Reason", "fdjiehfueig37367")
+					http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
+					return
+				} else {
+					log.Println("StatusPaymentRequired " + path)
+					w.Header().Set("X-Proxy-Redirect-Reason", "vedfdsfd323ddd")
+					w.WriteHeader(http.StatusPaymentRequired)
+					return
+				}
+			}
+		}
 	}
 
 	targetHost := dom.ServiceDle

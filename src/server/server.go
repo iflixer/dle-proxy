@@ -5,6 +5,7 @@ import (
 	"dle-proxy/database/domain"
 	"dle-proxy/database/domainAlias"
 	"dle-proxy/database/domainFile"
+	"dle-proxy/database/flixPost"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,6 +18,7 @@ type Service struct {
 	domainService      *domain.Service
 	domainAliasService *domainAlias.Service
 	fileService        *domainFile.Service
+	flixPostService    *flixPost.Service
 	customTransport    http.RoundTripper
 }
 
@@ -29,7 +31,7 @@ func (s *Service) Run() {
 	}
 }
 
-func NewService(port string, dbService *database.Service, domainService *domain.Service, domainAliasService *domainAlias.Service, fileService *domainFile.Service) (s *Service, err error) {
+func NewService(port string, dbService *database.Service, domainService *domain.Service, domainAliasService *domainAlias.Service, fileService *domainFile.Service, flixPostService *flixPost.Service) (s *Service, err error) {
 
 	s = &Service{
 		port:               port,
@@ -37,6 +39,7 @@ func NewService(port string, dbService *database.Service, domainService *domain.
 		domainService:      domainService,
 		domainAliasService: domainAliasService,
 		fileService:        fileService,
+		flixPostService:    flixPostService,
 		customTransport:    http.DefaultTransport,
 	}
 	s.server = http.Server{

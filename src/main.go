@@ -5,6 +5,7 @@ import (
 	"dle-proxy/database/domain"
 	"dle-proxy/database/domainAlias"
 	"dle-proxy/database/domainFile"
+	"dle-proxy/database/flixPost"
 	"dle-proxy/server"
 	"log"
 	"os"
@@ -65,7 +66,14 @@ func main() {
 		log.Println("fileService OK")
 	}
 
-	serverService, err := server.NewService(port, dbService, domainService, domainAliasService, fileService)
+	flixPostService, err := flixPost.NewService(dbService, 60)
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("flixPost OK")
+	}
+
+	serverService, err := server.NewService(port, dbService, domainService, domainAliasService, fileService, flixPostService)
 	if err != nil {
 		log.Fatal(err)
 	}
