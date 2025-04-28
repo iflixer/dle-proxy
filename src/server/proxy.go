@@ -29,6 +29,8 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	//log.Println(r.URL.String())
 	// r.URL.String() - with ?qwe=1
 	// r.URL.Path - without ?qwe=1
+	// r.URL.Query() - map[string][]string
+
 	start := time.Now()
 
 	forbiddenReplaceDomain := false
