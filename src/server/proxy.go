@@ -103,7 +103,7 @@ Host: https://` + host + `/`))
 				} else {
 					log.Println("StatusPaymentRequired " + uri)
 					w.Header().Set("X-Proxy-Redirect-Reason", "vedfdsfd323ddd")
-					w.WriteHeader(http.StatusPaymentRequired)
+					w.WriteHeader(http.StatusUnavailableForLegalReasons)
 					return
 				}
 			}
