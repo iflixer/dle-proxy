@@ -27,6 +27,8 @@ var hopHeaders = []string{
 func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 
 	//log.Println(r.URL.String())
+	// r.URL.String() - with ?qwe=1
+	// r.URL.Path - without ?qwe=1
 	start := time.Now()
 
 	forbiddenReplaceDomain := false
@@ -39,7 +41,8 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		hostFull = strings.Split(hostHeader, ":")
 	}
 	host := hostFull[0]
-	path := r.URL.String()
+	path := r.URL.Path
+	uri := r.URL.String()
 
 	//log.Println(host, path)
 
@@ -49,8 +52,8 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		log.Printf("domain alias %s id %d\n", host, alias.DomainID)
 		domain, err := s.domainService.GetDomainByID(alias.DomainID)
 		if err == nil {
-			targetURL := fmt.Sprintf("https://%s%s", domain.HostPublic, path)
-			log.Printf("%s 302 %s\n", path, targetURL)
+			targetURL := fmt.Sprintf("https://%s%s", domain.HostPublic, uri)
+			log.Printf("%s 302 %s\n", uri, targetURL)
 			http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
 			return
 		}
@@ -63,7 +66,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.HasPrefix(path, "/robots.txt") && dom.DisallowRobots {
+	if strings.HasPrefix(uri, "/robots.txt") && dom.DisallowRobots {
 		w.Write([]byte(`User-agent: *
 Disallow: /
 
@@ -89,14 +92,14 @@ Host: https://` + host + `/`))
 			// we have override
 			if post.AltName != altName {
 				if post.Redirect == 1 {
-					targetPath := strings.Replace(path, altName+".html", post.AltName+".html", 1)
-					targetURL := fmt.Sprintf("https://%s%s", dom.HostPublic, targetPath)
-					log.Printf("%s 301 %s\n", path, targetURL)
+					targetURI := strings.Replace(uri, altName+".html", post.AltName+".html", 1)
+					targetURL := fmt.Sprintf("https://%s%s", dom.HostPublic, targetURI)
+					log.Printf("%s 301 %s\n", uri, targetURL)
 					w.Header().Set("X-Proxy-Redirect-Reason", "fdjiehfueig37367")
 					http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
 					return
 				} else {
-					log.Println("StatusPaymentRequired " + path)
+					log.Println("StatusPaymentRequired " + uri)
 					w.Header().Set("X-Proxy-Redirect-Reason", "vedfdsfd323ddd")
 					w.WriteHeader(http.StatusPaymentRequired)
 					return
@@ -106,22 +109,22 @@ Host: https://` + host + `/`))
 	}
 
 	targetHost := dom.ServiceDle
-	if strings.HasPrefix(path, "/posts/") || strings.HasPrefix(path, "/fotos/") {
+	if strings.HasPrefix(uri, "/posts/") || strings.HasPrefix(uri, "/fotos/") {
 		targetHost = dom.ServiceImager
 		forbiddenReplaceDomain = true
 	}
 
-	if strings.HasPrefix(path, "/resize/") || strings.HasPrefix(path, "/crop/") {
+	if strings.HasPrefix(uri, "/resize/") || strings.HasPrefix(uri, "/crop/") {
 		targetHost = "http://imaginary:8088"
 		//path = strings.ReplaceAll(path, "/resize/", "/crop/")
-		path = strings.ReplaceAll(path, "?w=", "?width=")
-		path = strings.ReplaceAll(path, "?h=", "?height=")
-		path = strings.ReplaceAll(path, "&w=", "&width=")
-		path = strings.ReplaceAll(path, "&h=", "&height=")
+		uri = strings.ReplaceAll(uri, "?w=", "?width=")
+		uri = strings.ReplaceAll(uri, "?h=", "?height=")
+		uri = strings.ReplaceAll(uri, "&w=", "&width=")
+		uri = strings.ReplaceAll(uri, "&h=", "&height=")
 		forbiddenReplaceDomain = true
 	}
 
-	if strings.HasPrefix(path, "/sitemap") {
+	if strings.HasPrefix(uri, "/sitemap") {
 		targetHost = dom.ServiceSitemap
 		forbiddenReplaceDomain = true
 	}
@@ -132,7 +135,7 @@ Host: https://` + host + `/`))
 	}
 
 	// Create a new HTTP request with the same method, URL, and body as the original request
-	targetURL := targetHost + path
+	targetURL := targetHost + uri
 
 	proxyReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 	if err != nil {
