@@ -55,7 +55,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		domain, err := s.domainService.GetDomainByID(alias.DomainID)
 		if err == nil {
 			targetURL := fmt.Sprintf("https://%s%s", domain.HostPublic, uri)
-			log.Printf("%s 302 %s\n", uri, targetURL)
+			log.Printf("%s%s 302 %s\n", host, uri, targetURL)
 			http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
 			return
 		}
