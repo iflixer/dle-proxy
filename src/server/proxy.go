@@ -68,6 +68,16 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check basic auth if domain requires it
+	if dom.Auth {
+		username, password, ok := r.BasicAuth()
+		if !ok || username != "1" || password != "1" {
+			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+	}
+
 	if strings.HasPrefix(uri, "/robots.txt") && dom.DisallowRobots {
 		w.Write([]byte(`User-agent: *
 Disallow: /

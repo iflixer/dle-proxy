@@ -29,6 +29,7 @@ type Domain struct {
 	PortPublic     string
 	SchemePublic   string
 	DisallowRobots bool
+	Auth           bool
 }
 
 func (c *Domain) TableName() string {
