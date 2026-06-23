@@ -71,10 +71,24 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(uri, "/robots.txt") && dom.DisallowRobots {
 		w.Write([]byte(`User-agent: *
 Disallow: /
+Disallow: /engine/go.php
+Disallow: /user/
+Disallow: /newposts/
+Disallow: /statistics.html
+Disallow: /*subaction=userinfo
+Disallow: /*subaction=newposts
+Disallow: /*do=lastcomments
+Disallow: /*do=feedback
+Disallow: /*do=register
+Disallow: /*do=lostpassword
+Disallow: /*do=addnews
+Disallow: /*do=stats
+Disallow: /*do=pm
+Disallow: /*do=search
+Disallow: /*do=download
+Disallow: /*do=go
 
-User-agent: YandexBot
-Disallow: /
-
+Sitemap: https://` + host + `/sitemap.xml 
 Host: https://` + host + `/`))
 		return
 	}
