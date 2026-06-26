@@ -103,6 +103,12 @@ Host: https://` + host + `/`))
 		return
 	}
 
+	if strings.HasPrefix(uri, "/robots.txt") && dom.RobotsTxt != "" {
+		w.Header().Set("X-Edge-Source", "db")
+		w.Write([]byte(dom.RobotsTxt))
+		return
+	}
+
 	// file request?
 	if file, err := s.fileService.GetFile(dom.ID, path); err == nil {
 		log.Printf("%s STAT\n", path)
