@@ -6,10 +6,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
 )
+
+var proxyHostname, _ = os.Hostname()
 
 // Hop-by-hop headers. These are removed when sent to the backend.
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
@@ -25,6 +28,7 @@ var hopHeaders = []string{
 }
 
 func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-dleProxy-Hostname", proxyHostname)
 
 	//log.Println(r.URL.String())
 	// r.URL.String() - with ?qwe=1
@@ -104,7 +108,7 @@ Host: https://` + host + `/`))
 	}
 
 	if strings.HasPrefix(uri, "/robots.txt") && dom.RobotsTxt != "" {
-		w.Header().Set("X-Edge-Source", "db")
+		w.Header().Set("X-dleProxy-Edge-Source", "db")
 		w.Write([]byte(dom.RobotsTxt))
 		return
 	}
@@ -127,12 +131,12 @@ Host: https://` + host + `/`))
 					targetURI := strings.Replace(uri, altName+".html", post.AltName+".html", 1)
 					targetURL := fmt.Sprintf("https://%s%s", dom.HostPublic, targetURI)
 					log.Printf("%s 301 %s\n", uri, targetURL)
-					w.Header().Set("X-Proxy-Redirect-Reason", "fdjiehfueig37367")
+					w.Header().Set("X-dleProxy-Redirect-Reason", "fdjiehfueig37367")
 					http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
 					return
 				} else {
 					log.Println("StatusPaymentRequired " + uri)
-					w.Header().Set("X-Proxy-Redirect-Reason", "vedfdsfd323ddd")
+					w.Header().Set("X-dleProxy-Redirect-Reason", "vedfdsfd323ddd")
 					w.WriteHeader(http.StatusUnavailableForLegalReasons)
 					return
 				}
@@ -213,6 +217,7 @@ Host: https://` + host + `/`))
 	proxyReq.Header.Add("X-Domain-Skin", dom.Skin)
 
 	//Send the proxy request using the custom transport
+	backendStart := time.Now()
 	resp, err := s.customTransport.RoundTrip(proxyReq)
 	if err != nil {
 		log.Println("Proxy error", err)
@@ -257,6 +262,7 @@ Host: https://` + host + `/`))
 
 	if needReplaceDomain && !forbiddenReplaceDomain {
 		body, _ := io.ReadAll(resp.Body)
+		backendResponseTime := time.Since(backendStart).Milliseconds()
 
 		//log.Printf("%s %d R\n", path, len(body))
 
@@ -286,12 +292,13 @@ Host: https://` + host + `/`))
 			body = re.ReplaceAll(body, []byte(`<link rel="canonical" href="${1}">`))
 		}
 
-		w.Header().Set("X-Proxy-Mode", "modified")
+		w.Header().Set("X-dleProxy-Mode", "modified")
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
+		w.Header().Set("X-dleProxy-Backend-tm", fmt.Sprintf("%d", backendResponseTime))
 
 		log.Printf("%s (%s) %s %d R\n", r.Method, host, targetURL, len(body))
 
-		w.Header().Add("X-Proxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
+		w.Header().Add("X-dleProxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
 		w.WriteHeader(resp.StatusCode)
 		w.Write(body)
 		return
@@ -301,10 +308,12 @@ Host: https://` + host + `/`))
 
 	// это тупо конечно вычитывать ответ только чтобы узнать его длину но апач не передает Content-Length
 	body, _ := io.ReadAll(resp.Body)
+	backendResponseTime := time.Since(backendStart).Milliseconds()
 	log.Printf("%s (%s) %s %d D\n", r.Method, host, targetURL, len(body))
-	w.Header().Set("X-Proxy-Mode", "direct")
+	w.Header().Set("X-dleProxy-Mode", "direct")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(body)))
-	w.Header().Add("X-Proxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
+	w.Header().Set("X-dleProxy-Backend-tm", fmt.Sprintf("%d", backendResponseTime))
+	w.Header().Add("X-dleProxy-tm", fmt.Sprintf("%d", time.Since(start).Milliseconds()))
 	w.WriteHeader(resp.StatusCode)
 	w.Write(body)
 	// io.Copy(w, resp.Body)
