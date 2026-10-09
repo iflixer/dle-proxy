@@ -2,9 +2,11 @@ package server
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -59,7 +61,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 		domain, err := s.domainService.GetDomainByID(alias.DomainID)
 		if err == nil {
 			targetURL := fmt.Sprintf("https://%s%s", domain.HostPublic, uri)
-			log.Printf("%s%s 302 %s\n", host, uri, targetURL)
+			log.Printf("%s%s 301 %s\n", host, uri, targetURL)
 			http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
 			return
 		}
@@ -68,7 +70,7 @@ func (s *Service) Proxy(w http.ResponseWriter, r *http.Request) {
 	dom, err := s.domainService.GetDomain(host)
 	if err != nil {
 		log.Println("Proxy error - domain ["+host+"] not found", err)
-		http.Error(w, "Proxy error - domain ["+host+"] not found", http.StatusNotFound)
+		http.Error(w, "Proxy error - domain ["+host+"] not found", http.StatusServiceUnavailable)
 		return
 	}
 
@@ -221,7 +223,12 @@ Host: https://` + host + `/`))
 	resp, err := s.customTransport.RoundTrip(proxyReq)
 	if err != nil {
 		log.Println("Proxy error", err)
-		http.Error(w, "Proxy error", http.StatusInternalServerError)
+		status := http.StatusBadGateway
+		var netErr net.Error
+		if errors.As(err, &netErr) && netErr.Timeout() {
+			status = http.StatusGatewayTimeout
+		}
+		http.Error(w, "Proxy error", status)
 		return
 	}
 	defer resp.Body.Close()
